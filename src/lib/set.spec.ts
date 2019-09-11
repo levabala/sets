@@ -3,10 +3,12 @@ import test from 'ava';
 import {
   calcHash,
   createSet,
+  createSuperSet,
   dublicatesError,
   includes,
   intersect,
   merge,
+  notSameSupersetError,
   removeDublicates,
   substract,
   supersetError,
@@ -35,18 +37,37 @@ test('Hash calculating', t => {
   t.is(hash, '(asd_a_123_(empty)_(123_33))', 'hash');
 });
 
-test('Spec creating', t => {
+test('Set creating', t => {
   const emptySet = createSet([]);
   t.deepEqual(
     emptySet,
-    { hash: '(empty)', elements: [], vector: [] },
-    'empty set'
+    { hash: '(empty)', elements: [], vector: [], superset: createSuperSet() },
+    'empty'
   );
 
   const filledSet = createSet([132, 33]);
   t.deepEqual(
     filledSet,
-    { hash: calcHash(filledSet.elements), elements: [132, 33], vector: [1, 1] },
+    {
+      hash: calcHash(filledSet.elements),
+      elements: [132, 33],
+      vector: [1, 1],
+      superset: createSuperSet([132, 33])
+    },
+    'filled'
+  );
+});
+
+test('Same superset', t => {
+  const s1 = createSet([1, 2]);
+  const s2 = createSet([3, 4]);
+  const { message } = notSameSupersetError(s1, s2);
+
+  t.throws(
+    () => {
+      includes(s1, s2);
+    },
+    message,
     'message'
   );
 });

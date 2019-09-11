@@ -22,7 +22,7 @@
     "no-method-signature": true,
 
     // Functional style rules
-    "no-this": true,
+    // "no-this": true,s
     "no-class": true,
     "no-mixed-interface": true,
     "no-expression-statement": [
