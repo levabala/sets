@@ -1,5 +1,5 @@
 // primitive types
-export type Element = string | number | Set;
+export type Element = string | number | AnySet;
 export type ElementTypes = 'string' | 'number' | 'object';
 export type bit = 0 | 1;
 export type Vector = bit[];
@@ -22,12 +22,12 @@ export function isSet(obj: any): obj is Set {
   return obj.elements && obj.hash && obj.vector && obj.superset;
 }
 
+export function isSuperSet(obj: any): obj is SuperSet {
+  return obj.elements && obj.hash && !obj.vector && !obj.superset;
+}
+
 export function isAnySet(obj: any): obj is AnySet {
-  return (
-    obj.hash &&
-    typeof obj.elements === 'object' &&
-    obj.elements.length !== undefined
-  );
+  return obj.elements && obj.hash;
 }
 
 export function isArray(arg: any): arg is any[] {
@@ -129,7 +129,8 @@ export function substract(
 // check if is superset or supersets a equal
 export function testSupersetsEquality(set1: any, set2: any): true {
   return isSet(set1) && isSet(set2)
-    ? set1.hash === set2.hash || throwNotSameSupersetError(set1, set2)
+    ? set1.superset.hash === set2.superset.hash ||
+        throwNotSameSupersetError(set1, set2)
     : true;
 }
 
@@ -138,17 +139,28 @@ export function includes(set1: AnySet, set2: AnySet): boolean;
 export function includes(arg1: Element[], arg2: Element | Element[]): boolean;
 export function includes(
   arg1: AnySet | Element[],
-  arg2: AnySet | Element | Element[]
+  arg2: Element | Element[]
 ): boolean {
+  const doIncludesMany2One = (elements: Element[], el: Element) =>
+    elements.reduce(
+      (acc: boolean, val) => acc || isElementsEqual(val, el),
+      false
+    );
+
+  const doIncludesMany2Many = (elements1: Element[], elements2: Element[]) =>
+    elements2.reduce(
+      (acc: boolean, val) => acc && includes(elements1, val),
+      true
+    );
+
   return testSupersetsEquality(arg1, arg2) && (isAnySet(arg1) && isAnySet(arg2))
     ? includes(arg1.elements, arg2.elements)
     : !isAnySet(arg1) && !isAnySet(arg2)
     ? isArray(arg2)
-      ? arg2.reduce((acc: boolean, val) => acc && includes(arg1, val), true)
-      : arg1.reduce(
-          (acc: boolean, val) => acc || isElementsEqual(val, arg2),
-          false
-        )
+      ? doIncludesMany2Many(arg1, arg2)
+      : doIncludesMany2One(arg1, arg2)
+    : isArray(arg1) && isAnySet(arg2)
+    ? doIncludesMany2One(arg1, arg2)
     : false;
 }
 
@@ -194,27 +206,34 @@ export function createSuperSet(elements: Element[] = []): SuperSet {
   };
 }
 
+export function set2SuperSet({ elements, hash }: Set): SuperSet {
+  return { elements, hash };
+}
+
 export function createSet(elements: Element[], univesalSet: Set): Set;
 export function createSet(
   elements?: Element[],
-  univesalSet?: Set | Element[]
+  univesalSet?: SuperSet | Element[]
 ): Set;
 export function createSet(
   elements: Element[] = [],
-  univesalSet?: Set | Element[]
+  univesalSet?: SuperSet | Element[]
 ): Set {
   const sorted = elements.slice().sort();
 
   const superSetElements = univesalSet
-    ? isSet(univesalSet)
+    ? isAnySet(univesalSet)
       ? univesalSet.elements
       : univesalSet
     : sorted;
 
-  const superset: SuperSet =
-    univesalSet && isSet(univesalSet)
+  const superset: SuperSet = univesalSet
+    ? isSet(univesalSet)
+      ? set2SuperSet(univesalSet)
+      : isSuperSet(univesalSet)
       ? univesalSet
-      : createSuperSet(superSetElements);
+      : createSuperSet(superSetElements)
+    : createSuperSet(superSetElements);
 
   const set: Set = {
     elements: sorted,
@@ -308,4 +327,54 @@ export function calcHash(elements: Element[]): string {
   })`;
 
   return hash;
+}
+
+export function cardinality(set: AnySet): number {
+  return set.elements.length;
+}
+
+// vector operands
+export function and(v1: Vector, v2: Vector): Vector {
+  return v1.map((v, i) => (v && v2[i] ? 1 : 0));
+}
+
+export function or(v1: Vector, v2: Vector): Vector {
+  return v1.map((v, i) => (v || v2[i] ? 1 : 0));
+}
+
+export function xor(v1: Vector, v2: Vector): Vector {
+  return v1.map((el, i) => (el && v2[i] ? 0 : el || v2[i] ? 1 : 0));
+}
+
+export function not(v: Vector): Vector {
+  return v.map(el => (el ? 0 : 1));
+}
+
+export function same(v1: Vector, v2: Vector): boolean {
+  return v1.reduce((acc: boolean, val, i) => acc && val === v2[i], true);
+}
+
+export function createSetV(vector: Vector, superSet: SuperSet): Set {
+  return createSet(superSet.elements.filter((_, i) => vector[i]), superSet);
+}
+
+export function includesV(set1: Set, set2: Set): boolean {
+  return (
+    testSupersetsEquality(set1, set2) &&
+    same(and(set1.vector, set2.vector), set1.vector)
+  );
+}
+
+export function insersectV(set1: Set, set2: Set): Set {
+  return (
+    testSupersetsEquality(set1, set2) &&
+    createSetV(and(set1.vector, set2.vector), set1.superset)
+  );
+}
+
+export function mergeV(set1: Set, set2: Set): Set {
+  return (
+    testSupersetsEquality(set1, set2) &&
+    createSetV(or(set1.vector, set2.vector), set1.superset)
+  );
 }

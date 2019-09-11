@@ -36,6 +36,6 @@
     "no-console": false
   },
   "linterOptions": {
-    "exclude": ["src/**/*.spec.ts"]
+    "exclude": ["src/**/*.spec.ts", "src/**/*.usage.ts", "src/scripts/*"]
   }
 }

@@ -56,6 +56,11 @@ test('Set creating', t => {
     },
     'filled'
   );
+
+  t.notThrows(
+    () => createSet([1, 2], createSet([1, 2, 3])),
+    'simple set as superset'
+  );
 });
 
 test('Same superset', t => {
@@ -68,7 +73,23 @@ test('Same superset', t => {
       includes(s1, s2);
     },
     message,
-    'message'
+    'includes'
+  );
+
+  t.throws(
+    () => {
+      intersect(s1, s2);
+    },
+    message,
+    'intersect'
+  );
+
+  t.throws(
+    () => {
+      substract(s1, s2);
+    },
+    message,
+    'substract'
   );
 });
 
@@ -134,8 +155,9 @@ test('Vectors creating', t => {
 });
 
 test('Merging', t => {
-  const s1 = createSet([123, 33]);
-  const s2 = createSet(['asd', 33]);
+  const u = createSuperSet([123, 33, 'asd']);
+  const s1 = createSet([123, 33], u);
+  const s2 = createSet(['asd', 33], u);
 
   const m1_1 = merge([s1, s2]);
   const m1_2 = merge(s1, s2);
@@ -145,8 +167,9 @@ test('Merging', t => {
 });
 
 test('Intersect', t => {
-  const s1 = createSet([123, 33]);
-  const s2 = createSet(['asd', 33]);
+  const u = createSuperSet([123, 33, 'asd']);
+  const s1 = createSet([123, 33], u);
+  const s2 = createSet(['asd', 33], u);
 
   const i1_1 = intersect([s1, s2]);
   const i1_2 = intersect(s1, s2);
@@ -156,8 +179,9 @@ test('Intersect', t => {
 });
 
 test('Substract', t => {
-  const s1 = createSet([123, 33]);
-  const s2 = createSet(['asd', 33]);
+  const u = createSuperSet([123, 33, 'asd']);
+  const s1 = createSet([123, 33], u);
+  const s2 = createSet(['asd', 33], u);
 
   const r1_1 = substract(s1, s2);
   const r1_2 = substract(s1.elements, s2.elements);
