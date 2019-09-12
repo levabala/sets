@@ -19,15 +19,15 @@ export type AnySet = Set | SuperSet;
 
 // type guards
 export function isSet(obj: any): obj is Set {
-  return obj.elements && obj.hash && obj.vector && obj.superset;
+  return obj && obj.elements && obj.hash && obj.vector && obj.superset;
 }
 
 export function isSuperSet(obj: any): obj is SuperSet {
-  return obj.elements && obj.hash && !obj.vector && !obj.superset;
+  return obj && obj.elements && obj.hash && !obj.vector && !obj.superset;
 }
 
 export function isAnySet(obj: any): obj is AnySet {
-  return obj.elements && obj.hash;
+  return obj && obj.elements && obj.hash;
 }
 
 export function isArray(arg: any): arg is any[] {
@@ -331,6 +331,11 @@ export function calcHash(elements: Element[]): string {
 
 export function cardinality(set: AnySet): number {
   return set.elements.length;
+}
+
+export function set2str(set: AnySet): string {
+  // return `${new Array(deepness).fill('\t').join('')}hash:${set.hash}${set.}`
+  return set.hash;
 }
 
 // vector operands
