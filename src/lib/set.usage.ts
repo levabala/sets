@@ -1,5 +1,4 @@
-import { createSet, createSuperSet, merge } from './set';
-
+import { createSet, merge } from './set';
 
 function declareModule(moduleName: string): void {
   console.log(`\nModule "${moduleName}"\n`);
@@ -36,20 +35,20 @@ try {
 }
 
 // create a superset as U = { x | x ∈ N, x < 100}
-const numericU = createSuperSet(new Array(100).fill(null).map(i => i));
+// const numericU = createSuperSet(new Array(100).fill(null).map(i => i));
 
-// create some subsets of U
-const set3 = createSet([1, 2, 3], numericU);
-const set4 = createSet([2, 3, 4], numericU);
+// // create some subsets of U
+// const set3 = createSet([1, 2, 3], numericU);
+// const set4 = createSet([2, 3, 4], numericU);
 
-try {
-  createSet([1, 108], numericU); // will throw a error because number 108 is not under numericU superset
-} catch (e) {
-  say(
-    (e as Error).message,
-    "creating set with elements that aren't under superset cause the error"
-  );
-}
+// try {
+//   createSet([1, 108], numericU); // will throw a error because number 108 is not under numericU superset
+// } catch (e) {
+//   say(
+//     (e as Error).message,
+//     "creating set with elements that aren't under superset cause the error"
+//   );
+// }
 
 // do merge, intersect and substract
 

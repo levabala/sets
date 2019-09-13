@@ -1,6 +1,7 @@
 import test from 'ava';
 
 import {
+  and,
   calcHash,
   createSet,
   createSuperSet,
@@ -8,10 +9,15 @@ import {
   includes,
   intersect,
   merge,
+  not,
   notSameSupersetError,
+  or,
   removeDublicates,
+  same,
   substract,
   supersetError,
+  Vector,
+  xor,
 } from './set';
 
 test('Includes', t => {
@@ -34,14 +40,14 @@ test('Includes', t => {
 test('Hash calculating', t => {
   const hash = calcHash(['asd', 'a', 123, createSet([]), createSet([123, 33])]);
 
-  t.is(hash, '(asd_a_123_(empty)_(123_33))', 'hash');
+  t.is(hash, '{asd_a_123_{empty}_{123_33}}', 'hash');
 });
 
 test('Set creating', t => {
   const emptySet = createSet([]);
   t.deepEqual(
     emptySet,
-    { hash: '(empty)', elements: [], vector: [], superset: createSuperSet() },
+    { hash: '{empty}', elements: [], vector: [], superset: createSuperSet() },
     'empty'
   );
 
@@ -106,6 +112,12 @@ test('Dublicates', t => {
   const b = removeDublicates(a);
 
   t.deepEqual(b, [123, 33, 'asd'], 'removing');
+
+  t.throws(
+    () => createSuperSet([1, 2, 3, 3]),
+    dublicatesError([1, 2, 3, 3]).message,
+    'superset'
+  );
 });
 
 test('Supersets', t => {
@@ -188,4 +200,19 @@ test('Substract', t => {
 
   t.deepEqual(r1_1, r1_2, 'substract overloadings');
   t.is(r1_1.hash, calcHash([123]), 'substract');
+});
+
+test('Vector operands', t => {
+  t.true(same([1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 0, 1]), 'same');
+
+  const v1: Vector = [0, 1, 1, 1, 0];
+  const v2: Vector = [1, 1, 0, 0, 0];
+
+  t.true(same(and(v1, v2), [0, 1, 0, 0, 0]), 'and');
+
+  t.true(same(or(v1, v2), [1, 1, 1, 1, 0]), 'or');
+
+  t.true(same(xor(v1, v2), [1, 0, 1, 1, 0]), 'xor');
+
+  t.true(same(not(v1), [1, 0, 0, 0, 1]), 'not');
 });

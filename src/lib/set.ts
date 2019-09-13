@@ -84,11 +84,11 @@ export function supersetError(
 ): Error {
   return new Error(
     `Superset error. Expected set to be subset of superset. Diff: ${
-      isSet(superArg) && isSet(subArg)
-        ? substract(superArg, subArg)
-        : !isSet(superArg) && !isSet(subArg)
-        ? substract(superArg, subArg)
-        : []
+      isAnySet(superArg) && isAnySet(subArg)
+        ? set2str(substract(subArg, superArg))
+        : !isAnySet(superArg) && !isAnySet(subArg)
+        ? set2str(substract(subArg, superArg))
+        : 'nani?'
     }`
   );
 }
@@ -148,6 +148,7 @@ export function includes(
     );
 
   const doIncludesMany2Many = (elements1: Element[], elements2: Element[]) =>
+    (!elements1.length && !elements2.length) ||
     elements2.reduce(
       (acc: boolean, val) => acc && includes(elements1, val),
       true
@@ -191,6 +192,12 @@ export function removeDublicates(elements: Element[]): Element[] {
   );
 }
 
+export function checkForDublicates(elements: Element[]): true {
+  return getAllDublicates(elements).length === 0
+    ? true
+    : throwDublicatesError(elements);
+}
+
 export function isElementsEqual(el1: Element, el2: Element): boolean {
   const h1 = isSet(el1) ? el1.hash : el1;
   const h2 = isSet(el2) ? el2.hash : el2;
@@ -200,10 +207,12 @@ export function isElementsEqual(el1: Element, el2: Element): boolean {
 
 // creators
 export function createSuperSet(elements: Element[] = []): SuperSet {
-  return {
-    elements,
-    hash: calcHash(elements)
-  };
+  return (
+    checkForDublicates(elements) && {
+      elements,
+      hash: calcHash(elements)
+    }
+  );
 }
 
 export function set2SuperSet({ elements, hash }: Set): SuperSet {
@@ -312,7 +321,7 @@ export function calcHash(elements: Element[]): string {
     return key === 'number' || key === 'object' || key === 'string';
   }
 
-  const hash = `(${
+  const hash = `{${
     elements.length
       ? elements
           .map(elem => {
@@ -324,7 +333,7 @@ export function calcHash(elements: Element[]): string {
           })
           .join('_')
       : 'empty'
-  })`;
+  }}`;
 
   return hash;
 }
@@ -335,7 +344,7 @@ export function cardinality(set: AnySet): number {
 
 export function set2str(set: AnySet): string {
   // return `${new Array(deepness).fill('\t').join('')}hash:${set.hash}${set.}`
-  return set.hash;
+  return set.hash.split('_').join(',');
 }
 
 // vector operands
@@ -382,4 +391,8 @@ export function mergeV(set1: Set, set2: Set): Set {
     testSupersetsEquality(set1, set2) &&
     createSetV(or(set1.vector, set2.vector), set1.superset)
   );
+}
+
+export function equalV(set1: Set, set2: Set): boolean {
+  return testSupersetsEquality(set1, set2) && same(set1.vector, set2.vector);
 }
