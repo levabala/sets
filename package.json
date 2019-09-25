@@ -10,6 +10,7 @@
   "keywords": [],
   "scripts": {
     "prog1": "ts-node src/scripts/program1.ts ",
+    "prog2": "ts-node src/scripts/program2.ts ",
     "describe": "npm-scripts-info",
     "build": "run-s clean && run-p build:*",
     "build:main": "tsc -p tsconfig.json",
@@ -19,8 +20,8 @@
     "fix:tslint": "tslint --fix --project .",
     "test": "run-s build test:*",
     "test:lint": "tslint --project . && prettier \"src/**/*.ts\" --list-different",
-    "test:unit": "nyc --silent ava --verbose",
-    "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch\"",
+    "test:unit": "nyc --silent ava",
+    "watch": "run-s clean build:main && run-p \"build:main -- -w\" \"test:unit -- --watch  --verbose\"",
     "cov": "run-s build test:unit cov:html && open-cli coverage/index.html",
     "cov:html": "nyc report --reporter=html",
     "cov:send": "nyc report --reporter=lcov && codecov",
